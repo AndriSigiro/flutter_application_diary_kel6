@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'db_helper.dart'; 
-import 'add_edit_note_page.dart'; 
-import 'preferences_helper.dart'; 
+import 'package:intl/intl.dart'; // Import untuk format tanggal
+import 'db_helper.dart';
+import 'add_edit_note_page.dart';
+import 'preferences_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -13,16 +14,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final DBHelper _dbHelper = DBHelper();
   final PreferencesHelper _preferencesHelper = PreferencesHelper();
-  bool _isDarkMode = false; 
-  List<Map<String, dynamic>> _notes = []; 
+  bool _isDarkMode = false;
+  List<Map<String, dynamic>> _notes = [];
 
   @override
   void initState() {
     super.initState();
     _fetchNotes();
-    _loadThemeMode(); 
+    _loadThemeMode();
   }
 
+  /// Memuat preferensi tema dari `SharedPreferences`
   Future<void> _loadThemeMode() async {
     bool themeMode = await _preferencesHelper.getThemeMode();
     setState(() {
@@ -30,6 +32,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  /// Mengganti tema dan menyimpannya ke `SharedPreferences`
   Future<void> _toggleTheme() async {
     setState(() {
       _isDarkMode = !_isDarkMode;
@@ -37,6 +40,7 @@ class _HomePageState extends State<HomePage> {
     await _preferencesHelper.setThemeMode(_isDarkMode);
   }
 
+  /// Mengambil catatan dari database
   Future<void> _fetchNotes() async {
     final notes = await _dbHelper.getNotes();
     setState(() {
@@ -44,6 +48,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  /// Menambah atau mengedit catatan
   void _addOrEditNote([Map<String, dynamic>? note]) async {
     final result = await Navigator.push(
       context,
@@ -52,15 +57,21 @@ class _HomePageState extends State<HomePage> {
           noteId: note?['id'],
           initialTitle: note?['title'],
           initialContent: note?['content'],
-          isDarkMode: _isDarkMode, 
+          isDarkMode: _isDarkMode, // Mengirim status tema ke halaman edit
         ),
       ),
     );
 
     if (result != null) {
       if (result['id'] == null) {
-        await _dbHelper.insertNote(result);
+        // Tambah catatan baru dengan tanggal otomatis
+        await _dbHelper.insertNote({
+          'title': result['title'],
+          'content': result['content'],
+          'date': DateTime.now().toString(), // Tanggal dan waktu otomatis
+        });
       } else {
+        // Perbarui catatan yang sudah ada tanpa mengubah tanggal
         await _dbHelper.updateNote(result['id'], result);
       }
       _fetchNotes();
@@ -99,15 +110,18 @@ class _HomePageState extends State<HomePage> {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: _isDarkMode ? Colors.black : Colors.purple[100],
-          title: const Text(
+          title: Text(
             'My Diary',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: _isDarkMode ? Colors.white : Colors.black87,
             ),
           ),
           centerTitle: true,
+          iconTheme: IconThemeData(
+            color: _isDarkMode ? Colors.white : Colors.black87,
+          ),
           actions: [
             IconButton(
               icon: Icon(
@@ -156,11 +170,25 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.purple[800],
                         ),
                       ),
-                      subtitle: Text(
-                        note['content'],
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Colors.grey[600]),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            note['content'],
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            // Jika note['date'] tidak null, format tanggal; jika null, tampilkan teks kosong
+                            note['date'] != null
+                                ? DateFormat('yyyy-MM-dd – kk:mm')
+                                    .format(DateTime.parse(note['date']))
+                                : '', // Format tanggal
+                            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          ),
+                        ],
                       ),
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red[400]),
