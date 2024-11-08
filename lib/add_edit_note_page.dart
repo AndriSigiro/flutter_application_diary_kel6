@@ -4,12 +4,14 @@ class AddEditNotePage extends StatefulWidget {
   final int? noteId;
   final String? initialTitle;
   final String? initialContent;
+  final bool isDarkMode; 
 
   const AddEditNotePage({
     Key? key,
     this.noteId,
     this.initialTitle,
     this.initialContent,
+    required this.isDarkMode,
   }) : super(key: key);
 
   @override
@@ -51,44 +53,70 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.noteId == null ? 'Add Note' : 'Edit Note'),
-        actions: [
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title'),
+    return MaterialApp(
+      theme: widget.isDarkMode ? ThemeData.dark() : ThemeData.light(),
+      home: Scaffold(
+        appBar: AppBar(
+          backgroundColor: widget.isDarkMode ? Colors.black : Colors.purple[100],
+          title: Text(
+            widget.noteId == null ? 'Tambah Catatan' : 'Edit Catatan',
+            style: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black87),
+          ),
+          iconTheme: IconThemeData(color: widget.isDarkMode ? Colors.white : Colors.black87),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  labelText: 'Judul',
+                  labelStyle: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.purple[700]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                style: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black87),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _contentController,
+                decoration: InputDecoration(
+                  labelText: 'Isi Catatan',
+                  labelStyle: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.purple[700]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                style: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black87),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton(
+            onPressed: _saveNote,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: widget.isDarkMode ? Colors.grey[800] : Colors.purple[300],
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            TextField(
-              controller: _contentController,
-              decoration: InputDecoration(labelText: 'Content'),
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
+            child: const Text(
+              'Simpan',
+              style: TextStyle(fontSize: 16, color: Colors.white),
             ),
-          ],
+          ),
         ),
       ),
-      bottomNavigationBar: Padding(
-  padding: const EdgeInsets.all(16.0),
-  child: ElevatedButton(
-    onPressed: _saveNote,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.blue, // Mengatur warna latar belakang tombol menjadi biru
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-    ),
-    child: const Text(
-      'Simpan',
-      style: TextStyle(fontSize: 16, color: Colors.white), // Warna teks putih agar kontras dengan tombol biru
-    ),
-  ),
-),
-
     );
   }
 }
