@@ -16,6 +16,8 @@ class _HomePageState extends State<HomePage> {
   final PreferencesHelper _preferencesHelper = PreferencesHelper();
   bool _isDarkMode = false;
   List<Map<String, dynamic>> _notes = [];
+  List<Map<String, dynamic>> filteredNotes = [];
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -24,8 +26,30 @@ class _HomePageState extends State<HomePage> {
     _loadThemeMode();
   }
 
+
+  void _updateFilteredNotes() {
+    setState(() {
+      if (searchQuery.isEmpty) {
+        filteredNotes = _notes;
+      } else {
+        filteredNotes = _notes.where((note) {
+          final title = note['title'].toLowerCase();
+          final content = note['content'].toLowerCase();
+          return title.contains(searchQuery.toLowerCase()) || content.contains(searchQuery.toLowerCase());
+        }).toList();
+      }
+    });
+  }
+
+  // Memuat pemanggilan setiap kali teks diubah saat search
+  void _onSearchChanged(String query) {
+    searchQuery = query;
+    _updateFilteredNotes();
+  }
+
   /// Memuat preferensi tema dari `SharedPreferences`
   Future<void> _loadThemeMode() async {
+    _notes = await _dbHelper.getNotes();
     bool themeMode = await _preferencesHelper.getThemeMode();
     setState(() {
       _isDarkMode = themeMode;
@@ -111,12 +135,12 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           backgroundColor: _isDarkMode ? Colors.black : Colors.purple[100],
           title: Text(
-            'My Diary',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: _isDarkMode ? Colors.white : Colors.black87,
-            ),
+          'My Diary',
+          style: TextStyle(
+            color: _isDarkMode ? Colors.white : Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
           ),
           centerTitle: true,
           iconTheme: IconThemeData(
@@ -132,7 +156,38 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        body: _notes.isEmpty
+        body: Column(
+        children: [
+        Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+        decoration: BoxDecoration(
+        color: _isDarkMode ? Colors.grey[800] : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        ),
+          child: TextField(
+            // Memfilter daftar catatan
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Cari catatan...',
+              prefixIcon: Icon(Icons.search, color: Colors.grey[600],),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              hintStyle: TextStyle(
+                color: _isDarkMode ? Colors.white54 : Colors.black54,
+              ),
+              contentPadding: const EdgeInsets.all(10),
+            ),
+            style: TextStyle(
+              color: _isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+        ),
+        ),
+        Expanded(
+        child: filteredNotes.isEmpty
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -151,9 +206,10 @@ class _HomePageState extends State<HomePage> {
               )
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: _notes.length,
+                // Menggunakan filteredNotes agar jumlah item yang diketik di search mengikuti hasil pencarian
+                itemCount: filteredNotes.length,
                 itemBuilder: (context, index) {
-                  final note = _notes[index];
+                  final note = filteredNotes[index];
                   return Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -199,6 +255,9 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               ),
+            ),
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _addOrEditNote(),
           backgroundColor: Colors.purple[300],

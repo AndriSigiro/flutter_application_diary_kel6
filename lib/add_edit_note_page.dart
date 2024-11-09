@@ -62,6 +62,12 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
             widget.noteId == null ? 'Tambah Catatan' : 'Edit Catatan',
             style: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black87),
           ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            ),
           iconTheme: IconThemeData(color: widget.isDarkMode ? Colors.white : Colors.black87),
           centerTitle: true,
           elevation: 0,
