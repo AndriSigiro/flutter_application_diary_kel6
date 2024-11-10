@@ -8,7 +8,6 @@ class PreferencesHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_themeKey, isDarkMode);
   }
-
   Future<bool> getThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_themeKey) ?? false;
@@ -18,7 +17,6 @@ class PreferencesHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_loginStatusKey, isLoggedIn);
   }
-
   Future<bool> getLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_loginStatusKey) ?? false;
